@@ -18,13 +18,25 @@ class Config:
         if ida_dir_env and os.path.exists(ida_dir_env):
             return ida_dir_env
 
-        # Default for IDA 9.1 on macOS
         if self.system == "Darwin":
             default_path = "/Applications/IDA91/IDA Professional 9.1.app/Contents/MacOS"
             if os.path.exists(default_path):
                 return default_path
-                
-        # TODO: Add Windows/Linux defaults if needed, user focused on macOS IDA 9.1
+
+        if self.system == "Windows":
+            program_files = os.environ.get("ProgramFiles", r"C:\Program Files")
+            candidates = [
+                os.path.join(program_files, "IDA Pro 9.3"),
+                os.path.join(program_files, "IDA Professional 9.3"),
+                os.path.join(program_files, "IDA Pro 9.1"),
+                os.path.join(program_files, "IDA Professional 9.1"),
+                os.path.join(program_files, "IDA Pro 9.0"),
+                os.path.join(program_files, "IDA Professional 9.0"),
+            ]
+            for path in candidates:
+                if os.path.exists(path):
+                    return path
+
         return None
 
     def _find_idalib_python(self):
@@ -40,10 +52,23 @@ class Config:
         bindiff_env = os.environ.get("BINDIFF_PATH")
         if bindiff_env and os.path.exists(bindiff_env):
             return bindiff_env
-            
+
         if self.system == "Darwin":
-            return "/usr/local/bin/bindiff"
-        
+            default = "/usr/local/bin/bindiff"
+            if os.path.exists(default):
+                return default
+
+        if self.system == "Windows":
+            program_files = os.environ.get("ProgramFiles", r"C:\Program Files")
+            candidates = [
+                os.path.join(program_files, "BinDiff", "bin", "bindiff.exe"),
+                os.path.join(program_files, "Google", "BinDiff", "bin", "bindiff.exe"),
+                os.path.join(program_files, "Zynamics", "BinDiff", "bin", "bindiff.exe"),
+            ]
+            for path in candidates:
+                if os.path.exists(path):
+                    return path
+
         return shutil.which("bindiff")
 
     def validate(self):

@@ -111,14 +111,17 @@ def export_binary(binary_path, output_dir):
                              candidates.append(f)                    # Filename
                              candidates.append(os.path.splitext(f)[0]) # Stem
         
-        # Priority 2: Hardcoded Fallbacks (Linux/macOS standard names)
+        # Priority 2: Hardcoded Fallbacks (platform-specific names)
         fallback_names = [
-            "binexport12_ida64",       
+            "binexport12_ida64",
+            "binexport12_ida64.dll",
+            "binexport12_ida.dll",
             "binexport12_ida64.so",
             "binexport12_ida",
             "binexport12_ida.dylib",
-            "binexport12", 
-            "binexport11", 
+            "binexport12.dll",
+            "binexport12",
+            "binexport11",
             "BinExport"
         ]
         candidates.extend(fallback_names)

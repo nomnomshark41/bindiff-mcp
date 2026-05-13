@@ -30,6 +30,13 @@ A Model Context Protocol (MCP) server that provides binary comparison capabiliti
 ## Platform-Specific Configuration
 The tool attempts to auto-detect IDA and BinDiff. You can override these by setting environment variables or editing `src/config.py`.
 
+### Windows
+- **IDA Pro**: Auto-detected in `C:\Program Files\IDA Pro 9.3`, `IDA Professional 9.3`, 9.1, and 9.0 variants.
+- **BinDiff**: Auto-detected in `C:\Program Files\BinDiff\bin\`, `Google\BinDiff\bin\`, or `Zynamics\BinDiff\bin\`.
+- **Environment**:
+  - `IDADIR`: Path to IDA installation (e.g., `C:\Program Files\IDA Pro 9.3`).
+  - `BINDIFF_PATH`: Path to `bindiff.exe` (e.g., `C:\Program Files\BinDiff\bin\bindiff.exe`).
+
 ### macOS
 - **IDA Pro**: 9.1 (recommended) or 9.0+.
 - **BinDiff**: Installed via installer.
@@ -63,6 +70,11 @@ The tool attempts to auto-detect IDA and BinDiff. You can override these by sett
 ### Running Remotely (SSE) - Recommended
 
 Start the server in SSE mode so it can be accessed by remote or local clients via HTTP:
+
+**Windows (PowerShell)**:
+```powershell
+$env:IDADIR="C:\Program Files\IDA Pro 9.3"; $env:BINDIFF_PATH="C:\Program Files\BinDiff\bin\bindiff.exe"; uv run bindiff-mcp --transport sse --host 0.0.0.0 --port 8001
+```
 
 **Linux (Docker/Server)**:
 ```bash
