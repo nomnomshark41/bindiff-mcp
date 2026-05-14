@@ -1,4 +1,5 @@
 import os
+import re
 import sys
 import logging
 import asyncio
@@ -13,12 +14,25 @@ from src.core.bindiff_runner import BinDiffRunner
 from src.core.parser import BinDiffParser
 from src.utils.temp_manager import temporary_workspace
 
-# Configure logging
-logging.basicConfig(level=logging.INFO)
+# Configure logging — MCP stdio transport uses stdout for the JSON-RPC protocol,
+# so all logs MUST go to stderr or the protocol stream gets corrupted and the
+# client hangs waiting for a valid response.
+logging.basicConfig(level=logging.INFO, stream=sys.stderr)
 logger = logging.getLogger("bindiff_mcp")
 
 # Initialize FastMCP
 mcp = FastMCP("BinDiff Service")
+
+_DRIVE_GLUED_RE = re.compile(r'^\.[\\/]?([A-Za-z]:)')
+
+def _normalize_path(path: str) -> str:
+    """Repair paths mangled by clients that glue '.' or './' onto a Windows
+    absolute path (e.g. '.C:\\foo' or './C:/foo'), then return an absolute path.
+    """
+    if not path:
+        return path
+    fixed = _DRIVE_GLUED_RE.sub(r'\1', path)
+    return os.path.abspath(fixed)
 
 @mcp.tool()
 async def bindiff_compare(primary_binary: str, secondary_binary: str, output_results_dir: str = ".") -> str:
@@ -30,18 +44,22 @@ async def bindiff_compare(primary_binary: str, secondary_binary: str, output_res
     2. matched_different.json (Matched but Changed functions)
     3. primary_only.json (Unmatched in Primary)
     4. secondary_only.json (Unmatched in Secondary)
-    
+
     Args:
         primary_binary: Path to the first binary (e.g. original)
         secondary_binary: Path to the second binary (e.g. patched)
         output_results_dir: Directory to save the result files (default: current dir)
     """
-    
+
     # Validate Inputs
     errors = config.validate()
     if errors:
         return f"Configuration Error: {', '.join(errors)}"
-        
+
+    primary_binary = _normalize_path(primary_binary)
+    secondary_binary = _normalize_path(secondary_binary)
+    output_results_dir = _normalize_path(output_results_dir)
+
     if not os.path.exists(primary_binary):
         return f"Error: Primary binary not found at {primary_binary}"
     if not os.path.exists(secondary_binary):
@@ -60,23 +78,23 @@ async def bindiff_compare(primary_binary: str, secondary_binary: str, output_res
             pri_dir = os.path.join(workspace, "primary")
             sec_dir = os.path.join(workspace, "secondary")
             
-            print(f"Exporting primary: {primary_binary}")
-            print(f"Exporting secondary: {secondary_binary}")
-            
+            logger.info(f"Exporting primary: {primary_binary}")
+            logger.info(f"Exporting secondary: {secondary_binary}")
+
             # Run exports in parallel threads (subprocesses block the thread, so this releases the event loop)
             # Use asyncio.to_thread to run the blocking export_binary method in a separate thread
             task_pri = asyncio.to_thread(ida.export_binary, primary_binary, pri_dir)
             task_sec = asyncio.to_thread(ida.export_binary, secondary_binary, sec_dir)
-            
+
             results = await asyncio.gather(task_pri, task_sec)
             primary_export, secondary_export = results
 
             primary_funcs_json = os.path.splitext(primary_export)[0] + ".functions.json"
             secondary_funcs_json = os.path.splitext(secondary_export)[0] + ".functions.json"
-            
+
             # 3. Run BinDiff
             bindiff = BinDiffRunner()
-            print("Running BinDiff...")
+            logger.info("Running BinDiff...")
             diff_db = await asyncio.to_thread(bindiff.diff_exports, primary_export, secondary_export, workspace)
             
             # 4. Parse Results and Compute Sets
@@ -287,7 +305,7 @@ def main():
     args = parser.parse_args()
     
     if args.transport == "sse":
-        print(f"Starting SSE server 2on {args.host}:{args.port}")
+        print(f"Starting SSE server on {args.host}:{args.port}", file=sys.stderr)
         # FastMCP.run() doesn't accept host/port, they are in settings
         mcp.settings.host = args.host
         mcp.settings.port = args.port

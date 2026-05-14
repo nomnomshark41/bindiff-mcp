@@ -122,20 +122,16 @@ class IDARunner:
         logger.info(f"Running IDALib Helper: {' '.join(cmd)}")
         
         try:
-            print("timeout", config.timeout)
+            logger.info(f"timeout={config.timeout}")
             start_time = time.time()
-            print("current_time", start_time)
             result = subprocess.run(cmd, env=env, capture_output=True, text=True, timeout=config.timeout) # Use configured timeout
             end_time = time.time()
-            print("end_time", end_time)
-            print("time_consumed", (end_time - start_time) / 60, "minutes")   
+            logger.info(f"IDALib export took {(end_time - start_time) / 60:.2f} minutes")
             logger.debug("IDALib Output: " + result.stdout)
             if result.returncode != 0:
-                print(f"IDALib Return Code: {result.returncode}")
                 logger.error(f"IDALib failed with return code {result.returncode}")
-                logger.error("IDALib Error: " + result.stderr)
-                print("IDALib Error: " + result.stderr)
-                print("IDALib Output: " + result.stdout)
+                logger.error("IDALib Stderr: " + result.stderr)
+                logger.error("IDALib Stdout: " + result.stdout)
                 raise RuntimeError(f"IDALib failed (code {result.returncode}): {result.stderr}")
         except subprocess.TimeoutExpired:
             logger.error("IDALib execution timed out")
