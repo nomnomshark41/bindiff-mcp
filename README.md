@@ -67,35 +67,35 @@ The tool attempts to auto-detect IDA and BinDiff. You can override these by sett
 
 ## Usage
 
-### Running Remotely (SSE) - Recommended
+### Running Remotely (Streamable HTTP) - Recommended
 
-Start the server in SSE mode so it can be accessed by remote or local clients via HTTP:
+Start the server in Streamable HTTP mode so it can be accessed by remote or local clients via HTTP:
 
 **Windows (PowerShell)**:
 ```powershell
-$env:IDADIR="C:\Program Files\IDA Professional 9.3"; $env:BINDIFF_PATH="C:\Program Files\BinDiff\bin\bindiff.exe"; uv run bindiff-mcp --transport sse --host 0.0.0.0 --port 8001
+$env:IDADIR="C:\Program Files\IDA Professional 9.3"; $env:BINDIFF_PATH="C:\Program Files\BinDiff\bin\bindiff.exe"; uv run bindiff-mcp --transport streamable-http --host 0.0.0.0 --port 8001
 ```
 
 **Linux (Docker/Server)**:
 ```bash
-IDADIR=/app/ida-pro-9.1 BINDIFF_PATH=/usr/bin/bindiff uv run bindiff-mcp --transport sse --host 0.0.0.0 --port 8001
+IDADIR=/app/ida-pro-9.1 BINDIFF_PATH=/usr/bin/bindiff uv run bindiff-mcp --transport streamable-http --host 0.0.0.0 --port 8001
 ```
 
 **macOS**:
 ```bash
-IDADIR="/Applications/IDA91/IDA Professional 9.1.app/Contents/MacOS" BINDIFF_PATH=/usr/local/bin/bindiff uv run bindiff-mcp --transport sse --host 0.0.0.0 --port 8001
+IDADIR="/Applications/IDA91/IDA Professional 9.1.app/Contents/MacOS" BINDIFF_PATH=/usr/local/bin/bindiff uv run bindiff-mcp --transport streamable-http --host 0.0.0.0 --port 8001
 ```
 
 ### Client Configuration (Antigravity, Claude Desktop, etc.)
 
-Configure your MCP client to connect via the `/sse` endpoint:
+Configure your MCP client to connect via the `/mcp` endpoint:
 
 ```json
 {
   "mcpServers": {
     "bindiff-mcp": {
       "type": "remote",
-      "url": "http://127.0.0.1:8001/sse"
+      "url": "http://127.0.0.1:8001/mcp"
     }
   }
 }

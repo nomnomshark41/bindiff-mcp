@@ -306,18 +306,26 @@ def main():
     """Entry point for the bindiff-mcp CLI."""
     import argparse
     parser = argparse.ArgumentParser(description="BinDiff MCP Server")
-    parser.add_argument("--transport", default="stdio", choices=["stdio", "sse"], help="Transport mode")
-    parser.add_argument("--host", default="0.0.0.0", help="Host for SSE server")
-    parser.add_argument("--port", type=int, default=8000, help="Port for SSE server")
-    
+    parser.add_argument(
+        "--transport",
+        default="stdio",
+        choices=["stdio", "streamable-http"],
+        help="Transport mode",
+    )
+    parser.add_argument("--host", default="0.0.0.0", help="Host for HTTP server")
+    parser.add_argument("--port", type=int, default=8000, help="Port for HTTP server")
+
     args = parser.parse_args()
-    
-    if args.transport == "sse":
-        print(f"Starting SSE server on {args.host}:{args.port}", file=sys.stderr)
+
+    if args.transport == "streamable-http":
+        print(
+            f"Starting Streamable HTTP server on {args.host}:{args.port}{mcp.settings.streamable_http_path}",
+            file=sys.stderr,
+        )
         # FastMCP.run() doesn't accept host/port, they are in settings
         mcp.settings.host = args.host
         mcp.settings.port = args.port
-        mcp.run(transport="sse")
+        mcp.run(transport="streamable-http")
     else:
         mcp.run(transport="stdio")
 
