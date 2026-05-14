@@ -10,7 +10,7 @@ class Config:
         self.ida_dir = self._find_ida_dir()
         self.idalib_python = self._find_idalib_python()
         self.bindiff_path = self._find_bindiff()
-        self.timeout = int(os.environ.get("MCP_TIMEOUT", 36000))
+        self.timeout = int(os.environ.get("MCP_TIMEOUT", 300))
         
     def _find_ida_dir(self):
         """Finds the IDA installation directory for idalib."""
