@@ -24,14 +24,22 @@ logger = logging.getLogger("bindiff_mcp")
 mcp = FastMCP("BinDiff Service")
 
 _DRIVE_GLUED_RE = re.compile(r'^\.[\\/]?([A-Za-z]:)')
+_DOUBLE_SEP_RE = re.compile(r'(?<!^)[\\/]{2,}')
 
 def _normalize_path(path: str) -> str:
-    """Repair paths mangled by clients that glue '.' or './' onto a Windows
-    absolute path (e.g. '.C:\\foo' or './C:/foo'), then return an absolute path.
+    """Repair paths mangled by clients before resolving them.
+
+    Handles two common manglings:
+      1. '.' or './' glued onto a Windows absolute path
+         (e.g. '.C:\\foo' or './C:/foo' -> 'C:\\foo').
+      2. Doubled separators inside the path
+         (e.g. 'C:\\\\Users\\\\anast' -> 'C:\\Users\\anast').
+    Then returns an absolute, normalised path.
     """
     if not path:
         return path
     fixed = _DRIVE_GLUED_RE.sub(r'\1', path)
+    fixed = _DOUBLE_SEP_RE.sub(r'\\', fixed)
     return os.path.abspath(fixed)
 
 @mcp.tool()
